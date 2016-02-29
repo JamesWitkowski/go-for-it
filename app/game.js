@@ -1,5 +1,6 @@
-angular.module('con4', [])
-	.controller('GameController', function($scope){
+var app = angular.module('con4', [])
+
+	app.controller('GameController', function($scope){
 		
 		$scope.newGame = function(){
 			/**
@@ -7,6 +8,8 @@ angular.module('con4', [])
 			 * $scope.grid = buildGrid();
 			 * This is connect 4 so red plays first
 			 */
+            var victory = false;
+            $scope.grid = buildGrid();
 		}
 		
 		function buildGrid(){
@@ -24,6 +27,16 @@ angular.module('con4', [])
 			//$scope.grid = buildGrid();
 			//If your build grid is working correctly you can start up your server to see the grid
 			//drawn to the screen.
+            
+            var grid = [];
+            
+            for(var row = 0; row < 6; row++){
+				grid[row] = [];
+				for(var col = 0; col < 7; col++){
+					grid[row][col] = {row: row, col: col};
+				}
+			}
+			return grid;
 		}
 		
 		$scope.dropToken = function(col){
@@ -48,9 +61,14 @@ angular.module('con4', [])
 			 * $scope.grid[row][col]
 			 * set cell.hasToken = true
 			 * set cell.color $scope.activePlayer
-			 **/  
+			 **/ 
+             var cell = $scope.grid[row][col]; 
+			 cell.hasToken = true;
+			 cell.color = $scope.activePlayer; 
 			
 			//endTurn and checkVictory
+            endTurn();
+			checkVictory(cell);
 		}
 		
 		function checkSouth(row, col){
@@ -63,10 +81,17 @@ angular.module('con4', [])
 		 * Check South will need essentially two base cases
 		 * 
 		 */
-			
 			//Base case 1 found south Token return row - 1 to go back one step
-			
-			//base case 2 reached bottom of grid return row or 5
+			if($scope.grid[row][col].hasToken){
+				return row - 1;
+			}
+			//base case 2 reached bottom of grid
+			if(row >= 5){
+				return row;
+			}
+			row++;
+			return checkSouth(row, col);
+
 			
 			/**
 			 * if neither base case 
@@ -121,6 +146,34 @@ angular.module('con4', [])
 			 * otherwise 
 			 * return $scope.grid[nextRow][nextCol];
 			 */
+            var nextRow = cell.row;
+			var nextCol = cell.col;
+			
+			if(direction === 'bottom'){
+				nextRow++;
+			} else if(direction === 'left'){
+				nextCol--;
+			} else if(direction === 'right'){
+				nextCol++;
+			} else if(direction === 'diagUpLeft'){
+				nextCol--;
+				nextRow--;
+			} else if(direction === 'diagBotRight'){
+				nextCol++;
+				nextRow++;
+			} else if(direction === 'diagUpRight'){
+				nextCol--;
+				nextRow++;
+			} else if(direction === 'diagBotLeft'){
+				nextCol++;
+				nextRow--;
+			}
+			
+			if(nextRow < 0 || nextRow > 5 || nextCol > 6){
+				return;
+			}
+			
+			return $scope.grid[nextRow][nextCol];
 		}
 		
 		function checkNextCell(cell, matches, direction){
@@ -134,6 +187,13 @@ angular.module('con4', [])
 			 * 
 			 * otherwise return matches
 			 */
+            var nextCell = getNextCell(cell, direction);
+			if(nextCell && nextCell.hasToken && nextCell.color === cell.color){
+				matches++;
+				return checkNextCell(nextCell, matches, direction);
+			}
+			return matches;
+          
 		}
 		
 		function endTurn(){
@@ -143,5 +203,10 @@ angular.module('con4', [])
 			 * 'red' to 'yellow' 
 			 * and 'yellow' to 'red'
 			 */
+            if($scope.activePlayer === 'red'){
+				$scope.activePlayer = 'yellow';
+			} else {
+				$scope.activePlayer = 'red';
+			}
 		}
 	});
